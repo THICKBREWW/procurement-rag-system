@@ -593,23 +593,7 @@ This project is licensed under the MIT License - see LICENSE file for details.
 -SREE SNEHAN
 -YUVA SHREE
 
-## 🙏 Acknowledgments
 
-- Anthropic for Claude AI
-- ChromaDB team
-- Docling project
-- Sentence Transformers
-
-
-
-
-
-## 📚 Additional Resources
-
-- [Claude API Documentation](https://docs.anthropic.com)
-- [ChromaDB Documentation](https://docs.trychroma.com)
-- [Streamlit Documentation](https://docs.streamlit.io)
-- [Flask Documentation](https://flask.palletsprojects.com)
 
 ---
 
