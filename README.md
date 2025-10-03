@@ -16,6 +16,8 @@ An intelligent RAG-based system for procurement contract compliance checking, mi
 - **🎨 Web Interface**: Beautiful Streamlit UI for easy interaction
 - **🚀 REST API**: Flask backend for system integration
 - **📊 Analytics**: Track usage metrics and compliance scores
+ - **✍️ Local Grammar Check (No RAG)**: Fix grammar, spelling, and formatting locally
+ - **🛠️ Contract Fixing (Grammar + Compliance)**: Produce corrected, policy-aligned contracts
 
 ## 🏗️ Architecture
 
@@ -150,6 +152,7 @@ python-dotenv==1.0.0
 pydantic==2.6.0
 numpy==1.26.4
 pandas==2.2.0
+language-tool-python==2.8.1
 
 # Development
 pytest==8.0.0
@@ -263,6 +266,22 @@ curl -X POST http://localhost:5000/api/generate-contract \
 
 # List policies
 curl http://localhost:5000/api/list-documents
+
+# Grammar check (local, no RAG/models)
+curl -X POST http://localhost:5000/api/grammar-check \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contract_text": "This is a smaple agrement with erors.",
+    "contract_type": "service"
+  }'
+
+# Fix contract (requires policies uploaded)
+curl -X POST http://localhost:5000/api/fix-contract \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contract_text": "Your draft text here...",
+    "contract_type": "service"
+  }'
 ```
 
 ## 🎨 Streamlit UI Features
@@ -291,6 +310,15 @@ curl http://localhost:5000/api/list-documents
    - Search policies
 
 5. **📊 Analytics Dashboard**
+6. **✍️ Grammar & Clarity Check (Local)**
+   - Paste or upload TXT
+   - Local grammar/spell/style corrections (no RAG)
+   - View issues and download corrected text
+
+7. **🛠️ Fix Contract (Grammar + Compliance)**
+   - Paste or upload TXT
+   - Applies local grammar fixes and policy compliance using uploaded policies
+   - Shows post-fix compliance analysis and lets you download the final contract
    - Usage statistics
    - Compliance trends
    - Common violations
