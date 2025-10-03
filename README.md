@@ -551,7 +551,9 @@ This project is licensed under the MIT License - see LICENSE file for details.
 
 ## 👥 Authors
 
-- Your Name - Initial work
+- SANJAY S
+-SREE SNEHAN
+-YUVA SHREE
 
 ## 🙏 Acknowledgments
 
@@ -560,23 +562,9 @@ This project is licensed under the MIT License - see LICENSE file for details.
 - Docling project
 - Sentence Transformers
 
-## 📧 Support
 
-For issues and questions:
-- 📧 Email: support@yourcompany.com
-- 🐛 Issues: GitHub Issues
-- 💬 Discussions: GitHub Discussions
 
-## 🗺️ Roadmap
 
-- [ ] Multi-language support
-- [ ] Advanced analytics dashboard
-- [ ] Contract comparison tool
-- [ ] Automated testing suite
-- [ ] Docker deployment
-- [ ] Cloud storage integration
-- [ ] Email notifications
-- [ ] Approval workflow
 
 ## 📚 Additional Resources
 
