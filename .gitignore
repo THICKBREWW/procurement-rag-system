@@ -1,0 +1,7 @@
+.env
+__pycache__/
+venv/
+logs/*.log
+*.pyc
+.pdf_artifacts/
+chroma_db/
