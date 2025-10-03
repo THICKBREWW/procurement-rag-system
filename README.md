@@ -1,5 +1,27 @@
 # 🤝 Procurement Contract Compliance & Generation System
 
+Minimal overview
+- UI: Streamlit at `app/streamlit_app.py`
+- API: Flask at `app/api.py`
+- Enter API key in the UI sidebar (Apply API Key) or set `ANTHROPIC_API_KEY` in env.
+- Upload policies in the UI to enable compliance checks and contract fixing. Grammar Check works without a key.
+
+Run locally
+```bash
+pip install -r requirements.txt
+streamlit run app/streamlit_app.py
+```
+
+Deploy (Streamlit Cloud)
+- New app → Repo/branch → App path: `app/streamlit_app.py`
+- Optionally set secret `ANTHROPIC_API_KEY`, or paste it in the UI at runtime.
+
+Key endpoints (if running API)
+- POST `/api/grammar-check`
+- POST `/api/fix-contract`
+- POST `/api/check-compliance`
+- POST `/api/generate-contract`
+
 [![Deploy to Streamlit Cloud](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io)
 
 ![Python](https://img.shields.io/badge/python-3.9+-blue.svg)
