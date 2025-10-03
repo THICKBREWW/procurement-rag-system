@@ -144,6 +144,7 @@ streamlit run app/streamlit_app.py
 Notes
 - Grammar Check works locally (no external model). Fix Contract requires you to upload policies in the UI first.
 - Keep `.env` out of the repo; use Streamlit Secrets instead.
+ - Alternatively, you can paste the Claude API key directly in the Streamlit UI sidebar under “API Key” and click “Apply API Key”. This sets the key for the running session without needing Secrets.
 
 ## 📦 Installation Guide
 
