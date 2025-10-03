@@ -112,6 +112,34 @@ with st.sidebar:
     )
     
     st.markdown("---")
+    st.subheader("🔐 API Key")
+    api_key_placeholder = "sk-ant-..."
+    api_key_input = st.text_input(
+        "Enter API Key",
+        type="password",
+        placeholder=api_key_placeholder,
+        help="Used for compliance, missing clauses, contract generation, and fix contract"
+    )
+    key_col1, key_col2 = st.columns([2, 1])
+    with key_col1:
+        apply_key = st.button("Apply API Key", use_container_width=True)
+    with key_col2:
+        if getattr(st.session_state.rag, 'claude', None) is not None:
+            st.success("Configured", icon="✅")
+        else:
+            st.info("Not set", icon="ℹ️")
+
+    if apply_key:
+        if api_key_input:
+            os.environ["ANTHROPIC_API_KEY"] = api_key_input
+            st.session_state.api_key = api_key_input
+            # Reinitialize the RAG engine with the new key
+            st.session_state.rag = ProcurementRAG(api_key=api_key_input)
+            st.success("API key applied. Engine reinitialized.")
+        else:
+            st.warning("Please enter a valid API key.")
+
+    st.markdown("---")
     
     if st.button("🗑️ Clear History", use_container_width=True):
         st.session_state.history = []
@@ -964,7 +992,7 @@ with tab5:
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: #666; padding: 2rem 0;'>
-    <p><strong>Procurement Contract Assistant</strong> | Powered by Claude AI & ChromaDB</p>
+    <p><strong>Procurement Contract Assistant</strong></p>
     <p style='font-size: 0.9rem;'>Made with ❤️ for Procurement Teams</p>
 </div>
 """, unsafe_allow_html=True)

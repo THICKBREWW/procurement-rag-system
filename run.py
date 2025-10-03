@@ -144,6 +144,18 @@ def main():
         check_environment()
         return
     
+    # Allow launching the Streamlit UI even if .env is missing,
+    # since the API key can be entered at runtime in the UI.
+    if args.command == "ui":
+        run_streamlit()
+        return
+    
+    # Allow starting the Flask API without .env; API key can be set at runtime
+    if args.command == "api":
+        run_flask()
+        return
+    
+    # For other commands, enforce the environment check
     if not check_environment():
         print("\nERROR: Environment check failed. Please fix the issues above.")
         return

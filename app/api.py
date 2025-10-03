@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 import logging
 from functools import wraps
+import os
 import json
 
 # Add parent directory to path for imports when running directly
@@ -82,6 +83,28 @@ def handle_errors(f):
                 "endpoint": f.__name__
             }), 500
     return decorated_function
+
+# ========================================
+# CONFIGURATION ENDPOINTS
+# ========================================
+
+@app.route('/api/set-api-key', methods=['POST'])
+@require_json
+@handle_errors
+def set_api_key():
+    """Set Anthropic API key at runtime and reinitialize RAG instance."""
+    global rag_system
+    data = request.get_json()
+    key = data.get('api_key')
+    if not key:
+        return jsonify({"status": "error", "error": "api_key is required"}), 400
+    # Optionally validate prefix
+    if not isinstance(key, str) or len(key) < 10:
+        return jsonify({"status": "error", "error": "invalid api_key format"}), 400
+    os.environ['ANTHROPIC_API_KEY'] = key
+    rag_system = ProcurementRAG(api_key=key)
+    logger.info("Anthropic API key updated via /api/set-api-key and RAG reinitialized")
+    return jsonify({"status": "success"}), 200
 
 # ========================================
 # HEALTH & STATUS ENDPOINTS
