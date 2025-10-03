@@ -1,5 +1,7 @@
 # 🤝 Procurement Contract Compliance & Generation System
 
+[![Deploy to Streamlit Cloud](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io)
+
 ![Python](https://img.shields.io/badge/python-3.9+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Status](https://img.shields.io/badge/status-production--ready-brightgreen.svg)
@@ -129,6 +131,19 @@ python app/api.py
 # Terminal 2
 streamlit run app/streamlit_app.py
 ```
+
+## ☁️ One‑Click Deploy to Streamlit Cloud
+
+1. Push this repo to GitHub.
+2. Go to Streamlit Community Cloud → New app → pick this repo/branch.
+3. App file path: `app/streamlit_app.py`.
+4. Settings → Secrets:
+   - `ANTHROPIC_API_KEY=your_key_here`
+5. Deploy. Your public URL will be ready immediately.
+
+Notes
+- Grammar Check works locally (no external model). Fix Contract requires you to upload policies in the UI first.
+- Keep `.env` out of the repo; use Streamlit Secrets instead.
 
 ## 📦 Installation Guide
 
