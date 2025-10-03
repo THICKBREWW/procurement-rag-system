@@ -8,7 +8,7 @@ from datetime import datetime
 import tempfile
 
 # Add parent directory to path
-sys.path.append(str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.rag_engine import ProcurementRAG
 
@@ -83,7 +83,7 @@ with st.sidebar:
     
     col1, col2 = st.columns(2)
     with col1:
-        st.metric("📚 Policies", len([d for d in docs if d['collection'] == 'policy']))
+        st.metric("📚 Policies", len([d for d in docs if d.get('doc_type') == 'policy']))
     with col2:
         st.metric("📋 Total Docs", len(docs))
     
@@ -127,9 +127,11 @@ st.markdown("**AI-Powered Contract Compliance & Generation System**")
 st.markdown("---")
 
 # Main tabs
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab1, tab2, tab2a, tab2b, tab3, tab4, tab5 = st.tabs([
     "📋 Compliance Check", 
-    "📝 Generate Contract", 
+    "📝 Generate Contract",
+    "✍️ Grammar Check",
+    "🛠️ Fix Contract",
     "💡 Missing Clauses", 
     "📚 Policy Manager",
     "📊 Analytics"
@@ -447,6 +449,165 @@ COMPLIANCE CHECK:
                 else:
                     st.error(f"❌ Error: {result.get('error', 'Unknown error')}")
 
+# TAB 2a: Grammar Check (Local)
+with tab2a:
+    st.header("✍️ Grammar & Clarity Check (Local)")
+    st.markdown("Fix grammar, spelling, punctuation, and formatting locally without using RAG/models.")
+    
+    gc_type = st.selectbox(
+        "Contract Type:",
+        ["service", "procurement", "vendor", "software", "consulting", "construction"],
+        key="gc_type"
+    )
+    
+    gc_input_method = st.radio(
+        "Input Method:",
+        ["📝 Paste Text", "📄 Upload File"],
+        horizontal=True,
+        key="gc_input"
+    )
+    
+    gc_text = ""
+    if gc_input_method == "📝 Paste Text":
+        gc_text = st.text_area(
+            "Paste your contract text:",
+            height=300,
+            placeholder="Enter the contract text to grammar-check...",
+            key="gc_text_area"
+        )
+    else:
+        gc_file = st.file_uploader(
+            "Upload contract file:",
+            type=["txt"],
+            key="gc_file_upload"
+        )
+        if gc_file:
+            gc_text = gc_file.read().decode("utf-8")
+            st.success("✅ Loaded text from file")
+    
+    col_a, col_b = st.columns([1, 1])
+    with col_a:
+        run_gc = st.button("✍️ Run Grammar Check", type="primary", use_container_width=True)
+    with col_b:
+        if gc_text:
+            st.download_button(
+                "💾 Save Input",
+                gc_text,
+                file_name=f"grammar_input_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                use_container_width=True
+            )
+    
+    if run_gc and gc_text:
+        with st.spinner("✍️ Checking grammar locally..."):
+            result = st.session_state.rag.grammar_check(gc_text, gc_type)
+            if result.get("status") == "success":
+                st.markdown('<div class="success-box">✅ Grammar check completed!</div>', unsafe_allow_html=True)
+                st.subheader("📋 Issues (sample)")
+                issues = result.get("issues", [])
+                if issues:
+                    # Show up to 20 concise issues
+                    for i, issue in enumerate(issues[:20]):
+                        msg = issue.get("message", "")
+                        repl = ", ".join(issue.get("replacements", [])[:3])
+                        st.write(f"- {msg}{f' → {repl}' if repl else ''}")
+                else:
+                    st.info("No notable issues found.")
+                
+                st.subheader("📄 Corrected Text")
+                st.text_area("Corrected:", result.get("corrected_text", ""), height=300, key="gc_corrected_text")
+                
+                st.download_button(
+                    "📥 Download Corrected Text",
+                    result.get("corrected_text", ""),
+                    file_name=f"grammar_corrected_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                    mime="text/plain",
+                    use_container_width=True
+                )
+                
+                st.session_state.history.append({
+                    "type": "grammar_check",
+                    "timestamp": datetime.now().isoformat(),
+                    "contract_type": gc_type,
+                    "result": {k: v for k, v in result.items() if k != "corrected_text"}
+                })
+            else:
+                st.error(f"❌ Error: {result.get('error', 'Unknown error')}")
+    elif run_gc:
+        st.warning("⚠️ Please provide contract text to check")
+
+# TAB 2b: Fix Contract (Compliance + Grammar)
+with tab2b:
+    st.header("🛠️ Fix Contract (Grammar + Compliance)")
+    st.markdown("Correct grammar/formatting and apply policy compliance using uploaded policies.")
+    
+    fx_type = st.selectbox(
+        "Contract Type:",
+        ["service", "procurement", "vendor", "software", "consulting", "construction"],
+        key="fx_type"
+    )
+    
+    fx_input_method = st.radio(
+        "Input Method:",
+        ["📝 Paste Text", "📄 Upload File"],
+        horizontal=True,
+        key="fx_input"
+    )
+    
+    fx_text = ""
+    if fx_input_method == "📝 Paste Text":
+        fx_text = st.text_area(
+            "Paste your contract text:",
+            height=300,
+            placeholder="Enter the contract text to fix and make compliant...",
+            key="fx_text_area"
+        )
+    else:
+        fx_file = st.file_uploader(
+            "Upload contract file:",
+            type=["txt"],
+            key="fx_file_upload"
+        )
+        if fx_file:
+            fx_text = fx_file.read().decode("utf-8")
+            st.success("✅ Loaded text from file")
+    
+    docs_for_fix = st.session_state.rag.get_document_list()
+    if not docs_for_fix:
+        st.info("ℹ️ Upload policy documents in '📚 Policy Manager' to enable compliance-aware fixing.")
+    
+    run_fix = st.button("🛠️ Generate Corrected, Compliant Contract", type="primary", use_container_width=True)
+    if run_fix and fx_text:
+        with st.spinner("🛠️ Fixing contract using uploaded policies..."):
+            result = st.session_state.rag.fix_contract(fx_text, fx_type)
+            if result.get("status") == "success":
+                st.markdown('<div class="success-box">✅ Contract fixed successfully!</div>', unsafe_allow_html=True)
+                
+                st.subheader("📄 Final Contract")
+                st.text_area("Corrected Contract:", result.get("corrected_contract", ""), height=350, key="fx_corrected_text")
+                
+                if result.get("compliance_check") and result["compliance_check"].get("status") == "success":
+                    with st.expander("🔍 Compliance Check (Post-fix)"):
+                        st.markdown(result["compliance_check"]["analysis"])
+                
+                st.download_button(
+                    "📥 Download Final Contract",
+                    result.get("corrected_contract", ""),
+                    file_name=f"fixed_contract_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                    mime="text/plain",
+                    use_container_width=True
+                )
+                
+                st.session_state.history.append({
+                    "type": "contract_fix",
+                    "timestamp": datetime.now().isoformat(),
+                    "contract_type": fx_type,
+                    "result": {k: v for k, v in result.items() if k != "corrected_contract"}
+                })
+            else:
+                st.error(f"❌ Error: {result.get('error', 'Unknown error')}")
+    elif run_fix:
+        st.warning("⚠️ Please provide contract text to fix")
+
 # TAB 3: Missing Clauses
 with tab3:
     st.header("💡 Missing Clause Analyzer")
@@ -663,19 +824,19 @@ with tab4:
         if search_term:
             filtered_docs = [d for d in filtered_docs if search_term.lower() in d['filename'].lower()]
         if filter_type != "All":
-            filtered_docs = [d for d in filtered_docs if d['collection'] == filter_type]
+            filtered_docs = [d for d in filtered_docs if d.get('doc_type') == filter_type]
         
         st.info(f"📊 Showing {len(filtered_docs)} of {len(docs)} documents")
         
         # Display documents
         for i, doc in enumerate(filtered_docs):
-            with st.expander(f"📄 {doc['filename']} [{doc['collection']}]"):
+            with st.expander(f"📄 {doc['filename']} [{doc.get('doc_type', 'unknown')}]"):
                 col1, col2 = st.columns([3, 1])
                 
                 with col1:
-                    st.write(f"**Type:** {doc['collection']}")
-                    st.write(f"**Pages:** {doc['page_count']}")
-                    st.write(f"**Uploaded:** {doc['extraction_date'][:10] if doc['extraction_date'] else 'N/A'}")
+                    st.write(f"**Type:** {doc.get('doc_type', 'unknown')}")
+                    st.write(f"**Chunks:** {doc.get('chunks', 'N/A')}")
+                    st.write(f"**Uploaded:** {doc.get('upload_time', 'N/A')[:10] if doc.get('upload_time') else 'N/A'}")
                     st.write(f"**Hash:** `{doc['doc_hash'][:16]}...`")
                 
                 with col2:
@@ -740,13 +901,13 @@ with tab5:
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col3:
-        policy_count = len([d for d in docs if d['collection'] == 'policy'])
+        policy_count = len([d for d in docs if d.get('doc_type') == 'policy'])
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         st.metric("Policy Documents", policy_count)
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col4:
-        compliance_count = len([d for d in docs if d['collection'] == 'compliance'])
+        compliance_count = len([d for d in docs if d.get('doc_type') == 'compliance'])
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         st.metric("Compliance Docs", compliance_count)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -778,24 +939,24 @@ with tab5:
     
     st.markdown("---")
     
-    # Document collection breakdown
+    # Document type breakdown
     st.subheader("📊 Document Distribution")
     
     if docs:
-        collection_counts = {}
+        type_counts = {}
         for doc in docs:
-            coll = doc['collection']
-            collection_counts[coll] = collection_counts.get(coll, 0) + 1
+            doc_type = doc.get('doc_type', 'unknown')
+            type_counts[doc_type] = type_counts.get(doc_type, 0) + 1
         
         col1, col2 = st.columns(2)
         
         with col1:
-            st.bar_chart(collection_counts)
+            st.bar_chart(type_counts)
         
         with col2:
-            for coll, count in collection_counts.items():
+            for doc_type, count in type_counts.items():
                 percentage = (count / len(docs)) * 100
-                st.write(f"**{coll.title()}**: {count} documents ({percentage:.1f}%)")
+                st.write(f"**{doc_type.title()}**: {count} documents ({percentage:.1f}%)")
     else:
         st.info("Upload documents to see distribution analytics")
 

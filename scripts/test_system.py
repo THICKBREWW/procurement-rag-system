@@ -11,7 +11,7 @@ import json
 from datetime import datetime
 
 # Add parent directory to path
-sys.path.append(str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.rag_engine import ProcurementRAG
 from app.utils.logger import get_system_logger

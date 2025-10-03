@@ -3,12 +3,16 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import os
+import sys
 import tempfile
 from datetime import datetime
 from pathlib import Path
 import logging
 from functools import wraps
 import json
+
+# Add parent directory to path for imports when running directly
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.rag_engine import ProcurementRAG
 
@@ -105,9 +109,9 @@ def get_status():
         "timestamp": datetime.now().isoformat(),
         "statistics": {
             "total_documents": len(docs),
-            "policy_documents": len([d for d in docs if d['collection'] == 'policy']),
-            "vendor_documents": len([d for d in docs if d['collection'] == 'vendor']),
-            "compliance_documents": len([d for d in docs if d['collection'] == 'compliance'])
+            "policy_documents": len([d for d in docs if d.get('doc_type') == 'policy']),
+            "vendor_documents": len([d for d in docs if d.get('doc_type') == 'vendor']),
+            "compliance_documents": len([d for d in docs if d.get('doc_type') == 'compliance'])
         },
         "config": {
             "max_file_size": "10MB",
@@ -213,7 +217,7 @@ def list_documents():
     
     # Apply filter if specified
     if doc_type:
-        docs = [d for d in docs if d['collection'] == doc_type]
+        docs = [d for d in docs if d.get('doc_type') == doc_type]
     
     return jsonify({
         "status": "success",
@@ -328,6 +332,50 @@ def check_compliance():
             "status": "error",
             "error": result.get("error", "Unknown error")
         }), 500
+
+@app.route('/api/grammar-check', methods=['POST'])
+@require_json
+@handle_errors
+def grammar_check():
+    """Grammar/spell check and clarity fix for a contract"""
+    rag = init_rag()
+    data = request.get_json()
+    if 'contract_text' not in data:
+        return jsonify({
+            "error": "contract_text parameter is required",
+            "status": "error"
+        }), 400
+    contract_text = data['contract_text']
+    contract_type = data.get('contract_type', 'general')
+    logger.info(f"Running grammar check for {contract_type} contract")
+    result = rag.grammar_check(contract_text, contract_type)
+    status_code = 200 if result.get("status") == "success" else 500
+    return jsonify({
+        **result,
+        "timestamp": datetime.now().isoformat()
+    }), status_code
+
+@app.route('/api/fix-contract', methods=['POST'])
+@require_json
+@handle_errors
+def fix_contract():
+    """Produce an error-free, compliant contract based on uploaded policies"""
+    rag = init_rag()
+    data = request.get_json()
+    if 'contract_text' not in data:
+        return jsonify({
+            "error": "contract_text parameter is required",
+            "status": "error"
+        }), 400
+    contract_text = data['contract_text']
+    contract_type = data.get('contract_type', 'general')
+    logger.info(f"Fixing contract for compliance and grammar: {contract_type}")
+    result = rag.fix_contract(contract_text, contract_type)
+    status_code = 200 if result.get("status") == "success" else 500
+    return jsonify({
+        **result,
+        "timestamp": datetime.now().isoformat()
+    }), status_code
 
 @app.route('/api/suggest-clauses', methods=['POST'])
 @require_json
@@ -576,6 +624,24 @@ def api_documentation():
                 "path": "/health",
                 "method": "GET",
                 "description": "Health check endpoint"
+            },
+            "grammar_check": {
+                "path": "/api/grammar-check",
+                "method": "POST",
+                "description": "Grammar/spell check and clarity fix (local, no RAG)",
+                "body": {
+                    "contract_text": "required: contract text",
+                    "contract_type": "optional: contract type (default: general)"
+                }
+            },
+            "fix_contract": {
+                "path": "/api/fix-contract",
+                "method": "POST",
+                "description": "Correct grammar and apply policy compliance to return final contract",
+                "body": {
+                    "contract_text": "required: contract text",
+                    "contract_type": "optional: contract type (default: general)"
+                }
             },
             "status": {
                 "path": "/api/status",

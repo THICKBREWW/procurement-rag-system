@@ -13,6 +13,10 @@ import hashlib
 import logging
 import os
 from anthropic import Anthropic
+try:
+    import language_tool_python
+except Exception:  # pragma: no cover
+    language_tool_python = None
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -403,6 +407,114 @@ Provide detailed, actionable suggestions with example text for each missing clau
             logger.error(f"❌ Missing clause analysis failed: {e}")
             return {"status": "error", "error": str(e)}
     
+    def grammar_check(self, input_text: str, contract_type: str = "general") -> Dict:
+        """
+        Perform grammar, spelling, and basic style corrections locally (no RAG/models).
+        Returns corrected text and a list of issues found.
+        """
+        logger.info("📝 Running local grammar and clarity review on contract text...")
+        if language_tool_python is None:
+            return {"status": "error", "error": "language_tool_python is not installed or failed to load"}
+        try:
+            # Initialize LanguageTool (cached on instance)
+            if not hasattr(self, "_lt_en_us") or getattr(self, "_lt_en_us") is None:
+                self._lt_en_us = language_tool_python.LanguageTool('en-US')
+            matches = self._lt_en_us.check(input_text)
+            corrected_text = language_tool_python.utils.correct(input_text, matches)
+            issues = []
+            for m in matches[:200]:  # cap to avoid extremely large payloads
+                issues.append({
+                    "message": m.message,
+                    "replacements": [r.value for r in (m.replacements or [])][:5],
+                    "offset": m.offset,
+                    "length": m.errorLength,
+                    "rule_id": getattr(m.ruleId, "__str__", lambda: str(m.ruleId))(),
+                    "category": getattr(m.ruleIssueType, "__str__", lambda: str(m.ruleIssueType))()
+                })
+            logger.info("✅ Local grammar check completed")
+            return {
+                "status": "success",
+                "issues_found": len(matches),
+                "issues": issues,
+                "corrected_text": corrected_text,
+                "original_length": len(input_text),
+                "corrected_length": len(corrected_text)
+            }
+        except Exception as e:
+            logger.error(f"❌ Local grammar check failed: {e}")
+            return {"status": "error", "error": str(e)}
+    
+    def fix_contract(self, input_text: str, contract_type: str = "general") -> Dict:
+        """
+        Produce an error-free, policy-aligned contract by:
+        - Correcting grammar and formatting
+        - Applying compliance requirements from uploaded policies
+        - Filling missing mandatory clauses
+        Returns corrected contract and a brief change summary.
+        """
+        if not self.claude:
+            raise ValueError("Claude API key not configured")
+        
+        if not self.session_documents:
+            return {
+                "status": "error",
+                "error": "No policies uploaded. Please upload policy documents first."
+            }
+        
+        logger.info("🛠️ Generating corrected, compliant contract...")
+        
+        # Gather policy context
+        policy_context = self.get_relevant_policies(
+            f"{contract_type} contract compliance mandatory clauses procurement policies",
+            top_k=12
+        )
+        if not policy_context.strip():
+            return {
+                "status": "error",
+                "error": "No relevant policies found in uploaded documents."
+            }
+        
+        prompt = f"""You are a procurement compliance attorney and legal editor.
+Using the uploaded procurement policies, correct and finalize the following contract.
+
+Goals:
+1) Fix all grammar, spelling, punctuation, and formatting issues
+2) Ensure full compliance with the uploaded procurement policies
+3) Add missing mandatory clauses; keep optional clauses if appropriate
+4) Preserve parties' intended meaning; do not invent business terms
+5) Use clear, professional legal language and consistent numbering/headings
+
+UPLOADED PROCUREMENT POLICIES (from current session):
+{policy_context}
+
+ORIGINAL CONTRACT TEXT:
+{input_text}
+
+Output two sections:
+SECTION 1 - CHANGE SUMMARY: bullet list of key fixes and policy-driven changes (≤15 bullets)
+SECTION 2 - FINAL CONTRACT: the complete corrected contract ready for signature
+"""
+        try:
+            message = self.claude.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=8000,
+                temperature=0.2,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            corrected = message.content[0].text
+            # Validate with compliance check once more
+            compliance_result = self.check_compliance(corrected, contract_type)
+            logger.info("✅ Contract fix completed")
+            return {
+                "status": "success",
+                "corrected_contract": corrected,
+                "compliance_check": compliance_result,
+                "policies_referenced": len(self.session_documents)
+            }
+        except Exception as e:
+            logger.error(f"❌ Contract fix failed: {e}")
+            return {"status": "error", "error": str(e)}
+    
     def generate_contract(
         self,
         contract_params: Dict,
@@ -663,6 +775,34 @@ Generate a complete, corrected contract that addresses all issues and includes a
         self.session_documents = []
         
         logger.info("🗑️  Session cleared - all documents removed")
+
+    def delete_document(self, doc_hash: str) -> int:
+        """
+        Delete all chunks for a given document hash from all in-memory collections.
+        Returns the number of chunks deleted.
+        """
+        deleted_total = 0
+        
+        def _delete_from_collection(collection) -> int:
+            try:
+                results = collection.get(where={"doc_hash": doc_hash})
+                ids = results.get("ids", []) if results else []
+                if ids:
+                    collection.delete(ids=ids)
+                    return len(ids)
+            except Exception as e:
+                logger.warning(f"Delete error in collection: {e}")
+            return 0
+        
+        deleted_total += _delete_from_collection(self.policy_collection)
+        deleted_total += _delete_from_collection(self.vendor_collection)
+        deleted_total += _delete_from_collection(self.compliance_collection)
+        
+        # Remove from session document list
+        self.session_documents = [d for d in self.session_documents if d.get("doc_hash") != doc_hash]
+        
+        logger.info(f"🗑️ Deleted {deleted_total} chunks for document {doc_hash}")
+        return deleted_total
 
 
 # ----------------------------

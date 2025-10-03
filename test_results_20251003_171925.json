@@ -1,0 +1,62 @@
+[
+  {
+    "test": "Configuration",
+    "status": "PASS",
+    "message": "Configuration loaded, API key configured",
+    "timestamp": "2025-10-03T17:19:01.624174"
+  },
+  {
+    "test": "Logging System",
+    "status": "PASS",
+    "message": "Logging system working",
+    "timestamp": "2025-10-03T17:19:01.626237"
+  },
+  {
+    "test": "RAG Initialization",
+    "status": "PASS",
+    "message": "RAG system initialized successfully",
+    "timestamp": "2025-10-03T17:19:22.245336"
+  },
+  {
+    "test": "Document List",
+    "status": "PASS",
+    "message": "Retrieved 0 documents",
+    "timestamp": "2025-10-03T17:19:22.245406"
+  },
+  {
+    "test": "Session Info",
+    "status": "PASS",
+    "message": "Session info retrieved: 0 docs",
+    "timestamp": "2025-10-03T17:19:22.245455"
+  },
+  {
+    "test": "Search Query",
+    "status": "PASS",
+    "message": "Search executed, found 0 results",
+    "timestamp": "2025-10-03T17:19:25.082205"
+  },
+  {
+    "test": "Contract Validation",
+    "status": "PASS",
+    "message": "Contract validation working",
+    "timestamp": "2025-10-03T17:19:25.082699"
+  },
+  {
+    "test": "Compliance Check",
+    "status": "PASS",
+    "message": "Compliance check working (no policies loaded)",
+    "timestamp": "2025-10-03T17:19:25.082885"
+  },
+  {
+    "test": "Missing Clauses",
+    "status": "PASS",
+    "message": "Missing clause analysis working (no policies loaded)",
+    "timestamp": "2025-10-03T17:19:25.082997"
+  },
+  {
+    "test": "Contract Generation",
+    "status": "PASS",
+    "message": "Contract generation working (no policies loaded)",
+    "timestamp": "2025-10-03T17:19:25.083158"
+  }
+]
