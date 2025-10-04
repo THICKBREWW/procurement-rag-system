@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procurement Contract Assistant</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-handshake"></i>
+                    <h1>Procurement Contract Assistant</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-outline" id="apiKeyBtn">
+                        <i class="fas fa-key"></i> API Key
+                    </button>
+                    <button class="btn btn-primary" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <div class="layout">
+                <!-- Sidebar -->
+                <aside class="sidebar">
+                    <div class="sidebar-content">
+                        <!-- System Status -->
+                        <div class="card">
+                            <h3><i class="fas fa-chart-bar"></i> System Status</h3>
+                            <div class="metrics">
+                                <div class="metric">
+                                    <span class="metric-label">📚 Policies</span>
+                                    <span class="metric-value" id="policyCount">0</span>
+                                </div>
+                                <div class="metric">
+                                    <span class="metric-label">📋 Total Docs</span>
+                                    <span class="metric-value" id="totalDocs">0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Settings -->
+                        <div class="card">
+                            <h3><i class="fas fa-cog"></i> Settings</h3>
+                            <div class="form-group">
+                                <label for="contractType">Default Contract Type</label>
+                                <select id="contractType" class="form-control">
+                                    <option value="service">Service</option>
+                                    <option value="procurement">Procurement</option>
+                                    <option value="vendor">Vendor</option>
+                                    <option value="software">Software</option>
+                                    <option value="consulting">Consulting</option>
+                                    <option value="construction">Construction</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="includeOptional" checked>
+                                    <span class="checkmark"></span>
+                                    Include Optional Clauses
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label for="topK">Search Results</label>
+                                <input type="range" id="topK" min="3" max="20" value="10" class="slider">
+                                <span class="slider-value">10</span>
+                            </div>
+                        </div>
+
+                        <!-- API Key -->
+                        <div class="card">
+                            <h3><i class="fas fa-key"></i> API Key</h3>
+                            <div class="form-group">
+                                <input type="password" id="apiKeyInput" placeholder="sk-ant-..." class="form-control">
+                                <button class="btn btn-primary btn-sm" id="applyApiKey">Apply API Key</button>
+                            </div>
+                            <div class="api-status" id="apiStatus">
+                                <i class="fas fa-info-circle"></i> Not set
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="card">
+                            <h3><i class="fas fa-tools"></i> Actions</h3>
+                            <button class="btn btn-outline btn-block" id="clearHistoryBtn">
+                                <i class="fas fa-trash"></i> Clear History
+                            </button>
+                            <button class="btn btn-outline btn-block" id="refreshSystemBtn">
+                                <i class="fas fa-sync-alt"></i> Refresh System
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Main Content Area -->
+                <div class="content">
+                    <!-- Navigation Tabs -->
+                    <nav class="tabs">
+                        <button class="tab-btn active" data-tab="compliance">
+                            <i class="fas fa-clipboard-check"></i> Compliance Check
+                        </button>
+                        <button class="tab-btn" data-tab="generate">
+                            <i class="fas fa-file-contract"></i> Generate Contract
+                        </button>
+                        <button class="tab-btn" data-tab="grammar">
+                            <i class="fas fa-spell-check"></i> Grammar Check
+                        </button>
+                        <button class="tab-btn" data-tab="fix">
+                            <i class="fas fa-wrench"></i> Fix Contract
+                        </button>
+                        <button class="tab-btn" data-tab="clauses">
+                            <i class="fas fa-lightbulb"></i> Missing Clauses
+                        </button>
+                        <button class="tab-btn" data-tab="policies">
+                            <i class="fas fa-book"></i> Policy Manager
+                        </button>
+                        <button class="tab-btn" data-tab="analytics">
+                            <i class="fas fa-chart-line"></i> Analytics
+                        </button>
+                    </nav>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content">
+                        <!-- Compliance Check Tab -->
+                        <div class="tab-panel active" id="compliance">
+                            <div class="card">
+                                <h2><i class="fas fa-clipboard-check"></i> Contract Compliance Checker</h2>
+                                <p>Verify if your contract complies with organizational policies</p>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Input Method:</label>
+                                        <div class="radio-group">
+                                            <label class="radio-label">
+                                                <input type="radio" name="complianceInput" value="text" checked>
+                                                <span class="radio-mark"></span>
+                                                📝 Paste Text
+                                            </label>
+                                            <label class="radio-label">
+                                                <input type="radio" name="complianceInput" value="file">
+                                                <span class="radio-mark"></span>
+                                                📄 Upload File
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="complianceContractType">Contract Type:</label>
+                                        <select id="complianceContractType" class="form-control">
+                                            <option value="service">Service</option>
+                                            <option value="procurement">Procurement</option>
+                                            <option value="vendor">Vendor</option>
+                                            <option value="software">Software</option>
+                                            <option value="consulting">Consulting</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="input-section" id="complianceTextSection">
+                                    <div class="form-group">
+                                        <label for="complianceText">Contract Text:</label>
+                                        <textarea id="complianceText" rows="12" placeholder="Enter the contract text you want to check for compliance..."></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="input-section hidden" id="complianceFileSection">
+                                    <div class="form-group">
+                                        <label for="complianceFile">Upload Contract File:</label>
+                                        <input type="file" id="complianceFile" accept=".txt,.pdf,.docx">
+                                        <small>Supported formats: TXT, PDF, DOCX</small>
+                                    </div>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button class="btn btn-primary" id="checkComplianceBtn">
+                                        <i class="fas fa-search"></i> Check Compliance
+                                    </button>
+                                    <button class="btn btn-outline" id="saveComplianceInputBtn" disabled>
+                                        <i class="fas fa-save"></i> Save Input
+                                    </button>
+                                </div>
+
+                                <div class="results hidden" id="complianceResults">
+                                    <h3>📊 Compliance Analysis</h3>
+                                    <div class="analysis-content" id="complianceAnalysis"></div>
+                                    
+                                    <div class="analysis-details">
+                                        <div class="detail-item">
+                                            <span class="detail-label">Contract Length:</span>
+                                            <span class="detail-value" id="complianceLength">-</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Policies Checked:</span>
+                                            <span class="detail-value" id="compliancePoliciesChecked">-</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Timestamp:</span>
+                                            <span class="detail-value" id="complianceTimestamp">-</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="download-section">
+                                        <button class="btn btn-outline" id="downloadComplianceReportBtn">
+                                            <i class="fas fa-download"></i> Download Full Report
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Generate Contract Tab -->
+                        <div class="tab-panel" id="generate">
+                            <div class="card">
+                                <h2><i class="fas fa-file-contract"></i> Contract Generator</h2>
+                                <p>Generate policy-compliant contracts from your requirements</p>
+                                
+                                <div class="form-group">
+                                    <label for="generateContractType">Contract Type:</label>
+                                    <select id="generateContractType" class="form-control">
+                                        <option value="service">Service</option>
+                                        <option value="procurement">Procurement</option>
+                                        <option value="vendor">Vendor</option>
+                                        <option value="software">Software</option>
+                                        <option value="consulting">Consulting</option>
+                                        <option value="construction">Construction</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-section">
+                                    <h3>👥 Parties Information</h3>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <h4>Buyer Information</h4>
+                                            <input type="text" id="buyerName" placeholder="Company Name" class="form-control">
+                                            <textarea id="buyerAddress" placeholder="Address" rows="3" class="form-control"></textarea>
+                                            <input type="text" id="buyerContact" placeholder="Contact Person" class="form-control">
+                                            <input type="email" id="buyerEmail" placeholder="Email" class="form-control">
+                                        </div>
+                                        <div class="form-group">
+                                            <h4>Vendor/Supplier Information</h4>
+                                            <input type="text" id="vendorName" placeholder="Company Name" class="form-control">
+                                            <textarea id="vendorAddress" placeholder="Address" rows="3" class="form-control"></textarea>
+                                            <input type="text" id="vendorContact" placeholder="Contact Person" class="form-control">
+                                            <input type="email" id="vendorEmail" placeholder="Email" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-section">
+                                    <h3>📋 Contract Details</h3>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <input type="text" id="contractValue" placeholder="Contract Value (e.g., $100,000)" class="form-control">
+                                            <input type="date" id="startDate" class="form-control">
+                                            <input type="text" id="paymentTerms" placeholder="Payment Terms" value="Net 30 days" class="form-control">
+                                        </div>
+                                        <div class="form-group">
+                                            <input type="text" id="duration" placeholder="Duration (e.g., 2 years)" class="form-control">
+                                            <input type="date" id="deliveryDate" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <textarea id="scope" placeholder="Scope of Work..." rows="4" class="form-control"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <textarea id="specialTerms" placeholder="Special Terms & Conditions..." rows="3" class="form-control"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <textarea id="deliverables" placeholder="Deliverables (one per line)..." rows="3" class="form-control"></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button class="btn btn-primary" id="generateContractBtn">
+                                        <i class="fas fa-rocket"></i> Generate Contract
+                                    </button>
+                                </div>
+
+                                <div class="results hidden" id="generateResults">
+                                    <h3>📄 Generated Contract</h3>
+                                    <textarea id="generatedContract" rows="15" readonly class="form-control"></textarea>
+                                    
+                                    <div class="contract-metrics">
+                                        <div class="metric">
+                                            <span class="metric-label">Word Count:</span>
+                                            <span class="metric-value" id="contractWordCount">-</span>
+                                        </div>
+                                        <div class="metric">
+                                            <span class="metric-label">Policies Referenced:</span>
+                                            <span class="metric-value" id="contractPoliciesReferenced">-</span>
+                                        </div>
+                                        <div class="metric">
+                                            <span class="metric-label">Contract Type:</span>
+                                            <span class="metric-value" id="contractTypeGenerated">-</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="download-section">
+                                        <button class="btn btn-outline" id="downloadContractBtn">
+                                            <i class="fas fa-download"></i> Download Contract (TXT)
+                                        </button>
+                                        <button class="btn btn-outline" id="downloadParamsBtn">
+                                            <i class="fas fa-download"></i> Download Parameters (JSON)
+                                        </button>
+                                        <button class="btn btn-outline" id="downloadFullReportBtn">
+                                            <i class="fas fa-download"></i> Download Full Report
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grammar Check Tab -->
+                        <div class="tab-panel" id="grammar">
+                            <div class="card">
+                                <h2><i class="fas fa-spell-check"></i> Grammar & Clarity Check</h2>
+                                <p>Fix grammar, spelling, punctuation, and formatting locally</p>
+                                
+                                <div class="form-group">
+                                    <label for="grammarContractType">Contract Type:</label>
+                                    <select id="grammarContractType" class="form-control">
+                                        <option value="service">Service</option>
+                                        <option value="procurement">Procurement</option>
+                                        <option value="vendor">Vendor</option>
+                                        <option value="software">Software</option>
+                                        <option value="consulting">Consulting</option>
+                                        <option value="construction">Construction</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Input Method:</label>
+                                    <div class="radio-group">
+                                        <label class="radio-label">
+                                            <input type="radio" name="grammarInput" value="text" checked>
+                                            <span class="radio-mark"></span>
+                                            📝 Paste Text
+                                        </label>
+                                        <label class="radio-label">
+                                            <input type="radio" name="grammarInput" value="file">
+                                            <span class="radio-mark"></span>
+                                            📄 Upload File
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="input-section" id="grammarTextSection">
+                                    <div class="form-group">
+                                        <label for="grammarText">Contract Text:</label>
+                                        <textarea id="grammarText" rows="12" placeholder="Enter the contract text to grammar-check..."></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="input-section hidden" id="grammarFileSection">
+                                    <div class="form-group">
+                                        <label for="grammarFile">Upload Contract File:</label>
+                                        <input type="file" id="grammarFile" accept=".txt">
+                                    </div>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button class="btn btn-primary" id="runGrammarCheckBtn">
+                                        <i class="fas fa-spell-check"></i> Run Grammar Check
+                                    </button>
+                                    <button class="btn btn-outline" id="saveGrammarInputBtn" disabled>
+                                        <i class="fas fa-save"></i> Save Input
+                                    </button>
+                                </div>
+
+                                <div class="results hidden" id="grammarResults">
+                                    <h3>📋 Issues Found</h3>
+                                    <div class="issues-list" id="grammarIssues"></div>
+                                    
+                                    <h3>📄 Corrected Text</h3>
+                                    <textarea id="grammarCorrectedText" rows="12" readonly class="form-control"></textarea>
+                                    
+                                    <div class="download-section">
+                                        <button class="btn btn-outline" id="downloadCorrectedTextBtn">
+                                            <i class="fas fa-download"></i> Download Corrected Text
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fix Contract Tab -->
+                        <div class="tab-panel" id="fix">
+                            <div class="card">
+                                <h2><i class="fas fa-wrench"></i> Fix Contract (Grammar + Compliance)</h2>
+                                <p>Correct grammar/formatting and apply policy compliance using uploaded policies</p>
+                                
+                                <div class="form-group">
+                                    <label for="fixContractType">Contract Type:</label>
+                                    <select id="fixContractType" class="form-control">
+                                        <option value="service">Service</option>
+                                        <option value="procurement">Procurement</option>
+                                        <option value="vendor">Vendor</option>
+                                        <option value="software">Software</option>
+                                        <option value="consulting">Consulting</option>
+                                        <option value="construction">Construction</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Input Method:</label>
+                                    <div class="radio-group">
+                                        <label class="radio-label">
+                                            <input type="radio" name="fixInput" value="text" checked>
+                                            <span class="radio-mark"></span>
+                                            📝 Paste Text
+                                        </label>
+                                        <label class="radio-label">
+                                            <input type="radio" name="fixInput" value="file">
+                                            <span class="radio-mark"></span>
+                                            📄 Upload File
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="input-section" id="fixTextSection">
+                                    <div class="form-group">
+                                        <label for="fixText">Contract Text:</label>
+                                        <textarea id="fixText" rows="12" placeholder="Enter the contract text to fix and make compliant..."></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="input-section hidden" id="fixFileSection">
+                                    <div class="form-group">
+                                        <label for="fixFile">Upload Contract File:</label>
+                                        <input type="file" id="fixFile" accept=".txt">
+                                    </div>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button class="btn btn-primary" id="fixContractBtn">
+                                        <i class="fas fa-wrench"></i> Generate Corrected, Compliant Contract
+                                    </button>
+                                </div>
+
+                                <div class="results hidden" id="fixResults">
+                                    <h3>📄 Final Contract</h3>
+                                    <textarea id="fixCorrectedText" rows="15" readonly class="form-control"></textarea>
+                                    
+                                    <div class="compliance-check-section">
+                                        <h4>🔍 Compliance Check (Post-fix)</h4>
+                                        <div class="analysis-content" id="fixComplianceCheck"></div>
+                                    </div>
+                                    
+                                    <div class="download-section">
+                                        <button class="btn btn-outline" id="downloadFixedContractBtn">
+                                            <i class="fas fa-download"></i> Download Final Contract
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Missing Clauses Tab -->
+                        <div class="tab-panel" id="clauses">
+                            <div class="card">
+                                <h2><i class="fas fa-lightbulb"></i> Missing Clause Analyzer</h2>
+                                <p>Identify missing critical clauses in your contract</p>
+                                
+                                <div class="form-group">
+                                    <label for="clauseContractType">Contract Type:</label>
+                                    <select id="clauseContractType" class="form-control">
+                                        <option value="service">Service</option>
+                                        <option value="procurement">Procurement</option>
+                                        <option value="vendor">Vendor</option>
+                                        <option value="software">Software</option>
+                                        <option value="consulting">Consulting</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Input Method:</label>
+                                    <div class="radio-group">
+                                        <label class="radio-label">
+                                            <input type="radio" name="clauseInput" value="text" checked>
+                                            <span class="radio-mark"></span>
+                                            📝 Paste Text
+                                        </label>
+                                        <label class="radio-label">
+                                            <input type="radio" name="clauseInput" value="file">
+                                            <span class="radio-mark"></span>
+                                            📄 Upload File
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="input-section" id="clauseTextSection">
+                                    <div class="form-group">
+                                        <label for="clauseText">Contract Text:</label>
+                                        <textarea id="clauseText" rows="12" placeholder="Enter the contract text to analyze for missing clauses..."></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="input-section hidden" id="clauseFileSection">
+                                    <div class="form-group">
+                                        <label for="clauseFile">Upload Contract File:</label>
+                                        <input type="file" id="clauseFile" accept=".txt,.pdf">
+                                    </div>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button class="btn btn-primary" id="analyzeClausesBtn">
+                                        <i class="fas fa-search"></i> Analyze Missing Clauses
+                                    </button>
+                                </div>
+
+                                <div class="results hidden" id="clauseResults">
+                                    <h3>📋 Missing Clause Analysis</h3>
+                                    <div class="analysis-content" id="clauseAnalysis"></div>
+                                    
+                                    <div class="analysis-details">
+                                        <div class="detail-item">
+                                            <span class="detail-label">Policies Referenced:</span>
+                                            <span class="detail-value" id="clausePoliciesReferenced">-</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Analysis Time:</span>
+                                            <span class="detail-value" id="clauseTimestamp">-</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="download-section">
+                                        <button class="btn btn-outline" id="downloadClauseReportBtn">
+                                            <i class="fas fa-download"></i> Download Analysis Report
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Policy Manager Tab -->
+                        <div class="tab-panel" id="policies">
+                            <div class="card">
+                                <h2><i class="fas fa-book"></i> Policy Document Manager</h2>
+                                <p>Upload and manage procurement policy documents</p>
+                                
+                                <div class="form-section">
+                                    <h3>📤 Upload New Policy</h3>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="policyFile">Select policy document (PDF):</label>
+                                            <input type="file" id="policyFile" accept=".pdf">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="policyType">Document Type:</label>
+                                            <select id="policyType" class="form-control">
+                                                <option value="policy">Policy</option>
+                                                <option value="vendor">Vendor</option>
+                                                <option value="compliance">Compliance</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <h4>📝 Add Metadata (Optional)</h4>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <input type="text" id="policyVersion" placeholder="Version (e.g., 2.1)" class="form-control">
+                                                <input type="text" id="policyDepartment" placeholder="Department (e.g., Procurement)" class="form-control">
+                                            </div>
+                                            <div class="form-group">
+                                                <input type="date" id="policyEffectiveDate" class="form-control">
+                                                <input type="text" id="policyAuthor" placeholder="Author/Approver" class="form-control">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-actions">
+                                        <button class="btn btn-primary" id="uploadPolicyBtn">
+                                            <i class="fas fa-upload"></i> Upload Policy
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="form-section">
+                                    <h3>📋 Stored Policy Documents</h3>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <input type="text" id="searchDocuments" placeholder="🔍 Search documents..." class="form-control">
+                                        </div>
+                                        <div class="form-group">
+                                            <select id="filterDocuments" class="form-control">
+                                                <option value="All">All</option>
+                                                <option value="policy">Policy</option>
+                                                <option value="vendor">Vendor</option>
+                                                <option value="compliance">Compliance</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="documents-list" id="documentsList">
+                                        <div class="no-documents">
+                                            <i class="fas fa-inbox"></i>
+                                            <p>No policy documents uploaded yet. Upload your first policy above!</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-section">
+                                    <h3>🔧 Bulk Operations</h3>
+                                    <div class="form-row">
+                                        <button class="btn btn-outline" id="exportDocumentListBtn">
+                                            <i class="fas fa-download"></i> Export Document List
+                                        </button>
+                                        <button class="btn btn-outline" id="testPolicySearchBtn">
+                                            <i class="fas fa-search"></i> Test Policy Search
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Analytics Tab -->
+                        <div class="tab-panel" id="analytics">
+                            <div class="card">
+                                <h2><i class="fas fa-chart-line"></i> Usage Analytics & Insights</h2>
+                                
+                                <div class="form-section">
+                                    <h3>📈 System Overview</h3>
+                                    <div class="metrics-grid">
+                                        <div class="metric-card">
+                                            <div class="metric-icon">📚</div>
+                                            <div class="metric-content">
+                                                <div class="metric-value" id="analyticsTotalDocs">0</div>
+                                                <div class="metric-label">Total Documents</div>
+                                            </div>
+                                        </div>
+                                        <div class="metric-card">
+                                            <div class="metric-icon">⚡</div>
+                                            <div class="metric-content">
+                                                <div class="metric-value" id="analyticsTotalOps">0</div>
+                                                <div class="metric-label">Total Operations</div>
+                                            </div>
+                                        </div>
+                                        <div class="metric-card">
+                                            <div class="metric-icon">📋</div>
+                                            <div class="metric-content">
+                                                <div class="metric-value" id="analyticsPolicyDocs">0</div>
+                                                <div class="metric-label">Policy Documents</div>
+                                            </div>
+                                        </div>
+                                        <div class="metric-card">
+                                            <div class="metric-icon">✅</div>
+                                            <div class="metric-content">
+                                                <div class="metric-value" id="analyticsComplianceDocs">0</div>
+                                                <div class="metric-label">Compliance Docs</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-section">
+                                    <h3>📜 Recent Activity</h3>
+                                    <div class="activity-list" id="activityList">
+                                        <div class="no-activity">
+                                            <i class="fas fa-history"></i>
+                                            <p>No activity recorded yet. Start using the system to see analytics!</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-actions">
+                                        <button class="btn btn-outline" id="exportHistoryBtn">
+                                            <i class="fas fa-download"></i> Export Activity History
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="form-section">
+                                    <h3>📊 Document Distribution</h3>
+                                    <div class="chart-container">
+                                        <canvas id="documentChart" width="400" height="200"></canvas>
+                                    </div>
+                                    <div class="chart-legend" id="chartLegend"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p id="loadingText">Processing...</p>
+        </div>
+    </div>
+
+    <!-- API Key Modal -->
+    <div class="modal hidden" id="apiKeyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-key"></i> API Key Configuration</h3>
+                <button class="modal-close" id="closeApiKeyModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="modalApiKey">Anthropic API Key:</label>
+                    <input type="password" id="modalApiKey" placeholder="sk-ant-..." class="form-control">
+                    <small>Used for compliance, missing clauses, contract generation, and fix contract</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancelApiKeyBtn">Cancel</button>
+                <button class="btn btn-primary" id="saveApiKeyBtn">Save API Key</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

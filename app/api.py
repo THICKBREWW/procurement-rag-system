@@ -19,7 +19,19 @@ from app.rag_engine import ProcurementRAG
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app, origins="*", supports_credentials=True)  # Enable CORS for all routes with no restrictions
+
+# Add additional CORS headers for iframe embedding
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    response.headers.add('X-Frame-Options', 'ALLOWALL')
+    response.headers.add('X-Content-Type-Options', 'nosniff')
+    response.headers.add('X-XSS-Protection', '0')
+    return response
 
 # Configuration
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB max file size
