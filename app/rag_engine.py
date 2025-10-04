@@ -46,8 +46,8 @@ class ProcurementRAG:
             model_name=self.embedding_model_name
         )
         
-        # Use ephemeral client - data only exists in current session
-        self.client = chromadb.EphemeralClient()
+        # Use persistent client - data persists between sessions
+        self.client = chromadb.PersistentClient(path="./chroma_db")
         
         # Create collections for different document types (in-memory)
         self.policy_collection = self.client.get_or_create_collection(
@@ -71,7 +71,7 @@ class ProcurementRAG:
         # Track uploaded documents in this session
         self.session_documents = []
         
-        logger.info(f"✅ Initialized ProcurementRAG with ephemeral storage (session-based)")
+        logger.info(f"✅ Initialized ProcurementRAG with persistent storage")
     
     def extract_text_from_pdf(self, pdf_path: str) -> Dict[str, any]:
         """Enhanced PDF extraction with structure preservation."""

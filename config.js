@@ -6,7 +6,7 @@
 const CONFIG = {
     // API Configuration
     API: {
-        BASE_URL: '', // Use relative URLs for nginx proxy
+        BASE_URL: 'http://localhost:5000', // Flask API server
         ENDPOINTS: {
             // Health and Status
             HEALTH: '/health',
@@ -58,7 +58,7 @@ const CONFIG = {
         LOADING_DELAY: 500,
         
         // Toast notification duration
-        TOAST_DURATION: 5000,
+        TOAST_DURATION: 8000,
         
         // File upload limits
         MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB

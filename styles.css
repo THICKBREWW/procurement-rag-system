@@ -14,11 +14,12 @@ html {
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    line-height: 1.6;
-    color: #333;
-    background-color: #f8fafc;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+    line-height: 1.5;
+    color: var(--gray-800);
+    background-color: var(--gray-50);
     min-height: 100vh;
+    font-size: 14px;
 }
 
 /* ========================================
@@ -26,26 +27,35 @@ body {
    ======================================== */
 
 :root {
-    /* Colors */
-    --primary-color: #667eea;
-    --primary-dark: #5a67d8;
-    --secondary-color: #764ba2;
-    --success-color: #48bb78;
-    --warning-color: #ed8936;
-    --error-color: #f56565;
-    --info-color: #4299e1;
+    /* Microsoft Fluent Design Colors for Word Add-in */
+    --primary-color: #0078d4;
+    --primary-dark: #106ebe;
+    --primary-light: #deecf9;
+    --secondary-color: #605e5c;
+    --accent-color: #8764b8;
+    --success-color: #107c10;
+    --warning-color: #ff8c00;
+    --error-color: #d13438;
+    --info-color: #0078d4;
     
-    /* Grays */
-    --gray-50: #f9fafb;
-    --gray-100: #f3f4f6;
-    --gray-200: #e5e7eb;
-    --gray-300: #d1d5db;
-    --gray-400: #9ca3af;
-    --gray-500: #6b7280;
-    --gray-600: #4b5563;
-    --gray-700: #374151;
-    --gray-800: #1f2937;
-    --gray-900: #111827;
+    /* Microsoft Office Grays */
+    --gray-50: #faf9f8;
+    --gray-100: #f3f2f1;
+    --gray-200: #edebe9;
+    --gray-300: #e1dfdd;
+    --gray-400: #a19f9d;
+    --gray-500: #605e5c;
+    --gray-600: #484644;
+    --gray-700: #323130;
+    --gray-800: #201f1e;
+    --gray-900: #11100f;
+    
+    /* Office Theme Colors */
+    --office-blue: #0078d4;
+    --office-green: #107c10;
+    --office-orange: #ff8c00;
+    --office-red: #d13438;
+    --office-purple: #8764b8;
     
     /* Spacing */
     --spacing-xs: 0.25rem;
@@ -104,13 +114,14 @@ body {
    ======================================== */
 
 .header {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    background: var(--primary-color);
     color: white;
-    padding: var(--spacing-lg) 0;
-    box-shadow: var(--shadow-md);
+    padding: var(--spacing-md) 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     position: sticky;
     top: 0;
     z-index: 100;
+    border-bottom: 1px solid var(--primary-dark);
 }
 
 .header-content {
@@ -177,24 +188,25 @@ body {
 
 .card {
     background: white;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-sm);
     padding: var(--spacing-lg);
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     border: 1px solid var(--gray-200);
     transition: var(--transition-normal);
 }
 
 .card:hover {
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
 .card h2,
 .card h3 {
     margin-bottom: var(--spacing-md);
-    color: var(--gray-800);
+    color: #1a1a1a;
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
+    font-weight: bold;
 }
 
 .card h2 {
@@ -250,14 +262,14 @@ body {
 }
 
 .metric-card {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    background: var(--primary-color);
     color: white;
     padding: var(--spacing-lg);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 1px 3px rgba(0, 120, 212, 0.2);
 }
 
 .metric-card .metric-icon {
@@ -291,24 +303,26 @@ body {
 .form-group label {
     display: block;
     margin-bottom: var(--spacing-sm);
-    font-weight: 500;
-    color: var(--gray-700);
+    font-weight: 600;
+    color: #1a1a1a;
+    font-size: 0.9rem;
 }
 
 .form-control {
     width: 100%;
     padding: var(--spacing-sm) var(--spacing-md);
     border: 1px solid var(--gray-300);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     font-size: 0.875rem;
     transition: var(--transition-fast);
     background: white;
+    color: var(--gray-800);
 }
 
 .form-control:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.1);
 }
 
 .form-control::placeholder {
@@ -374,22 +388,30 @@ textarea.form-control {
     background: var(--primary-color);
     color: white;
     border-color: var(--primary-color);
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0, 120, 212, 0.2);
 }
 
 .btn-primary:hover:not(:disabled) {
     background: var(--primary-dark);
     border-color: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 120, 212, 0.3);
 }
 
 .btn-outline {
     background: white;
-    color: var(--gray-700);
+    color: var(--gray-600);
     border-color: var(--gray-300);
+    font-weight: 500;
+    border-width: 1px;
 }
 
 .btn-outline:hover:not(:disabled) {
-    background: var(--gray-50);
+    background: var(--gray-100);
     border-color: var(--gray-400);
+    color: var(--gray-700);
+    transform: translateY(-1px);
 }
 
 .btn-sm {
@@ -539,24 +561,27 @@ textarea.form-control {
     gap: var(--spacing-sm);
     padding: var(--spacing-md) var(--spacing-lg);
     border: none;
-    background: none;
+    background: var(--gray-100);
     color: var(--gray-600);
     cursor: pointer;
     transition: var(--transition-fast);
-    border-bottom: 3px solid transparent;
+    border-bottom: 2px solid transparent;
     white-space: nowrap;
     font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 4px 4px 0 0;
 }
 
 .tab-btn:hover {
-    background: var(--gray-50);
-    color: var(--gray-800);
+    background: var(--gray-200);
+    color: var(--gray-700);
 }
 
 .tab-btn.active {
     color: var(--primary-color);
     border-bottom-color: var(--primary-color);
-    background: var(--gray-50);
+    background: white;
+    box-shadow: 0 -1px 4px rgba(0, 120, 212, 0.1);
 }
 
 .tab-content {
@@ -902,36 +927,50 @@ textarea.form-control {
     position: fixed;
     top: var(--spacing-lg);
     right: var(--spacing-lg);
-    z-index: 1500;
+    z-index: 9999;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
+    max-width: 400px;
 }
 
 .toast {
     background: white;
     border-radius: var(--radius-md);
-    padding: var(--spacing-md);
-    box-shadow: var(--shadow-lg);
-    border-left: 4px solid var(--primary-color);
+    padding: var(--spacing-lg);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    border-left: 6px solid var(--primary-color);
     min-width: 300px;
-    animation: slideIn 0.3s ease-out;
+    max-width: 400px;
+    animation: slideIn 0.4s ease-out;
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: #1a1a1a;
+    position: relative;
 }
 
 .toast.success {
-    border-left-color: var(--success-color);
+    border-left-color: #059669;
+    background: #f0fdf4;
+    color: #166534;
 }
 
 .toast.error {
-    border-left-color: var(--error-color);
+    border-left-color: #dc2626;
+    background: #fef2f2;
+    color: #991b1b;
 }
 
 .toast.warning {
-    border-left-color: var(--warning-color);
+    border-left-color: #d97706;
+    background: #fffbeb;
+    color: #92400e;
 }
 
 .toast.info {
-    border-left-color: var(--info-color);
+    border-left-color: #0284c7;
+    background: #f0f9ff;
+    color: #0c4a6e;
 }
 
 @keyframes slideIn {
@@ -943,6 +982,34 @@ textarea.form-control {
         transform: translateX(0);
         opacity: 1;
     }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/* Toast close button */
+.toast::after {
+    content: '×';
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.toast:hover::after {
+    opacity: 1;
 }
 
 /* ========================================

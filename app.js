@@ -90,20 +90,30 @@ class ProcurementApp {
         if (metadata.department) formData.append('department', metadata.department);
 
         try {
-            const result = await this.apiRequest(CONFIG.API.ENDPOINTS.UPLOAD_POLICY, {
+            const url = `${CONFIG.API.BASE_URL}${CONFIG.API.ENDPOINTS.UPLOAD_POLICY}`;
+            const response = await fetch(url, {
                 method: 'POST',
                 body: formData,
-                headers: {} // Let browser set Content-Type for FormData
+                // Don't set Content-Type header - let browser set it for FormData
             });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
 
             if (result.status === 'success') {
                 this.showToast('Policy uploaded successfully', 'success');
                 this.updateSystemStatus();
                 this.loadDocuments();
                 return result;
+            } else {
+                throw new Error(result.error || 'Upload failed');
             }
         } catch (error) {
-            this.showToast('Failed to upload policy', 'error');
+            console.error('Upload error:', error);
+            this.showToast(`Failed to upload policy: ${error.message}`, 'error');
             throw error;
         }
     }
@@ -410,10 +420,19 @@ class ProcurementApp {
         toast.className = `toast ${type}`;
         toast.textContent = message;
 
+        // Add click to close functionality
+        toast.addEventListener('click', () => {
+            toast.remove();
+        });
+
         container.appendChild(toast);
 
+        // Auto remove after duration
         setTimeout(() => {
-            toast.remove();
+            if (toast.parentNode) {
+                toast.style.animation = 'slideOut 0.3s ease-in forwards';
+                setTimeout(() => toast.remove(), 300);
+            }
         }, CONFIG.UI.TOAST_DURATION);
     }
 
@@ -527,7 +546,34 @@ class ProcurementApp {
         if (!requiredFields) return true;
 
         for (const field of requiredFields) {
-            if (!data[field] || data[field].trim() === '') {
+            let value = '';
+            
+            // Handle nested structure for contract generation
+            if (formType === 'generate' && data.parties) {
+                switch (field) {
+                    case 'buyerName':
+                        value = data.parties.buyer?.name || '';
+                        break;
+                    case 'vendorName':
+                        value = data.parties.vendor?.name || '';
+                        break;
+                    case 'scope':
+                        value = data.scope || '';
+                        break;
+                    case 'contractValue':
+                        value = data.value || '';
+                        break;
+                    case 'duration':
+                        value = data.duration || '';
+                        break;
+                    default:
+                        value = data[field] || '';
+                }
+            } else {
+                value = data[field] || '';
+            }
+            
+            if (!value || value.trim() === '') {
                 this.showToast(`Please fill in the ${field} field`, 'error');
                 return false;
             }

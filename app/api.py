@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from app.rag_engine import ProcurementRAG
 
 # Initialize Flask app
-app = Flask(__name__)
+app = Flask(__name__, static_folder='..', static_url_path='', template_folder='..')
 CORS(app, origins="*", supports_credentials=True)  # Enable CORS for all routes with no restrictions
 
 # Add additional CORS headers for iframe embedding
@@ -97,6 +97,39 @@ def handle_errors(f):
     return decorated_function
 
 # ========================================
+# STATIC FILE SERVING
+# ========================================
+
+@app.route('/')
+def serve_index():
+    """Serve the main HTML file"""
+    try:
+        return app.send_static_file('index.html')
+    except Exception as e:
+        logger.error(f"Error serving index.html: {e}")
+        return f"Error loading index.html: {e}", 404
+
+@app.route('/styles.css')
+def serve_css():
+    """Serve CSS file"""
+    return app.send_static_file('styles.css')
+
+@app.route('/app.js')
+def serve_js():
+    """Serve JavaScript file"""
+    return app.send_static_file('app.js')
+
+@app.route('/config.js')
+def serve_config():
+    """Serve config file"""
+    return app.send_static_file('config.js')
+
+@app.route('/favicon.ico')
+def serve_favicon():
+    """Serve favicon"""
+    return '', 204  # No content
+
+# ========================================
 # CONFIGURATION ENDPOINTS
 # ========================================
 
@@ -165,18 +198,22 @@ def get_status():
 @handle_errors
 def upload_policy():
     """Upload a policy document"""
+    logger.info("Upload policy request received")
     rag = init_rag()
     
     # Check if file is present
     if 'file' not in request.files:
+        logger.error("No file provided in request")
         return jsonify({
             "error": "No file provided",
             "status": "error"
         }), 400
     
     file = request.files['file']
+    logger.info(f"File received: {file.filename}")
     
     if file.filename == '':
+        logger.error("Empty filename")
         return jsonify({
             "error": "No file selected",
             "status": "error"
@@ -331,7 +368,7 @@ def search_policies():
 @handle_errors
 def check_compliance():
     """Check contract compliance"""
-    rag = init_rag()
+    global rag_system
     
     data = request.get_json()
     
@@ -346,6 +383,16 @@ def check_compliance():
     contract_type = data.get('contract_type', 'general')
     
     logger.info(f"Checking compliance for {contract_type} contract")
+    
+    # Check if API key is set
+    if not os.getenv('ANTHROPIC_API_KEY') or os.getenv('ANTHROPIC_API_KEY') == 'your-api-key-here':
+        return jsonify({
+            "error": "Claude API key not configured. Please set your API key first.",
+            "status": "error"
+        }), 400
+    
+    # Use the global RAG system (which should have the API key)
+    rag = rag_system if rag_system else init_rag()
     
     # Perform compliance check
     result = rag.check_compliance(
@@ -395,16 +442,28 @@ def grammar_check():
 @handle_errors
 def fix_contract():
     """Produce an error-free, compliant contract based on uploaded policies"""
-    rag = init_rag()
+    global rag_system
+    
     data = request.get_json()
     if 'contract_text' not in data:
         return jsonify({
             "error": "contract_text parameter is required",
             "status": "error"
         }), 400
+    
+    # Check if API key is set
+    if not os.getenv('ANTHROPIC_API_KEY') or os.getenv('ANTHROPIC_API_KEY') == 'your-api-key-here':
+        return jsonify({
+            "error": "Claude API key not configured. Please set your API key first.",
+            "status": "error"
+        }), 400
+    
     contract_text = data['contract_text']
     contract_type = data.get('contract_type', 'general')
     logger.info(f"Fixing contract for compliance and grammar: {contract_type}")
+    
+    # Use the global RAG system (which should have the API key)
+    rag = rag_system if rag_system else init_rag()
     result = rag.fix_contract(contract_text, contract_type)
     status_code = 200 if result.get("status") == "success" else 500
     return jsonify({

@@ -1,26 +1,47 @@
 # 🤝 Procurement Contract Compliance & Generation System
 
-Minimal overview
-- UI: Streamlit at `app/streamlit_app.py`
-- API: Flask at `app/api.py`
-- Enter API key in the UI sidebar (Apply API Key) or set `ANTHROPIC_API_KEY` in env.
-- Upload policies in the UI to enable compliance checks and contract fixing. Grammar Check works without a key.
+## 🚀 **Quick Start**
 
-Run locally
+### **Web Application (Recommended)**
 ```bash
+# Install dependencies
 pip install -r requirements.txt
-streamlit run app/streamlit_app.py
+
+# Start the Flask API server
+python app/api.py
+
+# Open your browser to:
+# http://localhost:5000
 ```
 
-Deploy (Streamlit Cloud)
-- New app → Repo/branch → App path: `app/streamlit_app.py`
-- Optionally set secret `ANTHROPIC_API_KEY`, or paste it in the UI at runtime.
+### **Streamlit UI (Alternative)**
+```bash
+# Start Streamlit interface
+streamlit run app/streamlit_app.py
+# Open: http://localhost:8501
+```
 
-Key endpoints (if running API)
-- POST `/api/grammar-check`
-- POST `/api/fix-contract`
-- POST `/api/check-compliance`
-- POST `/api/generate-contract`
+## ✨ **What's New - Latest Updates**
+
+- ✅ **Fixed Compliance Check Issues** - No more API key errors
+- ✅ **Fixed Form Validation** - No more repetitive "buyer name" errors  
+- ✅ **Persistent Storage** - Documents won't be lost on restart
+- ✅ **Microsoft Office UI** - Perfect Word add-in styling
+- ✅ **Enhanced Error Handling** - Better user experience
+
+## 🔧 **Configuration**
+
+1. **Set API Key**: Use the web interface or set `ANTHROPIC_API_KEY` environment variable
+2. **Upload Policies**: Add your procurement documents for compliance checking
+3. **Start Using**: All features work seamlessly with the new fixes
+
+## 📡 **API Endpoints**
+
+- `POST /api/check-compliance` - Check contract compliance
+- `POST /api/generate-contract` - Generate new contracts  
+- `POST /api/grammar-check` - Fix grammar and spelling
+- `POST /api/fix-contract` - Fix contracts with compliance
+- `POST /api/suggest-clauses` - Find missing clauses
 
 [![Deploy to Streamlit Cloud](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io)
 
@@ -543,16 +564,34 @@ grep "POST /api/" logs/app.log
 
 ### Common Issues
 
-**1. Claude API Key Error**
+**1. Compliance Check Fails**
 ```bash
-Error: ANTHROPIC_API_KEY not found
-Solution: Check .env file and environment variable
+Error: "Claude API key not configured"
+Solution: Set your API key in the web interface or environment variable
 ```
 
-**2. ChromaDB Lock Error**
+**2. Form Validation Errors**
+```bash
+Error: "Please fill in the buyerName field" (repeatedly)
+Solution: Fixed in latest version - form validation now works correctly
+```
+
+**3. Documents Lost on Restart**
+```bash
+Issue: Uploaded documents disappear after server restart
+Solution: Fixed - now uses persistent storage in ./chroma_db/
+```
+
+**4. ChromaDB Lock Error**
 ```bash
 Error: Database is locked
 Solution: Close all running instances, delete chroma_db/.chroma_lock
+```
+
+**5. Server Won't Start**
+```bash
+Error: "Cannot connect to API server"
+Solution: Make sure Flask server is running on port 5000
 ```
 
 **3. PDF Extraction Fails**

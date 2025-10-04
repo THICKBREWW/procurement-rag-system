@@ -127,13 +127,17 @@ def main():
         print("Available commands:")
         print("  install   - Install dependencies")
         print("  check     - Check environment configuration")
-        print("  ui        - Start Streamlit UI")
-        print("  api       - Start Flask API")
+        print("  api       - Start Flask API (Recommended - Web UI)")
+        print("  ui        - Start Streamlit UI (Alternative)")
         print("  test      - Run system tests")
         print("  import    - Import policy documents")
         print("  examples  - Run usage examples")
         print()
         print("Usage: python run.py <command>")
+        print()
+        print("🚀 Quick Start:")
+        print("  python run.py api    # Start web application")
+        print("  # Then open: http://localhost:5000")
         return
     
     if args.command == "install":
