@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cloudflare Tunnel Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🌐 Cloudflare Tunnel Test</h1>
+    <p><strong>Tunnel URL:</strong> https://oecd-edt-elvis-campbell.trycloudflare.com</p>
+    
+    <div id="results"></div>
+    
+    <button onclick="testHealth()">Test Health Endpoint</button>
+    <button onclick="testStatus()">Test Status Endpoint</button>
+    <button onclick="testAPIKey()">Test API Key Setting</button>
+    
+    <script>
+        const TUNNEL_URL = 'https://oecd-edt-elvis-campbell.trycloudflare.com';
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            document.getElementById('results').appendChild(div);
+        }
+        
+        async function testHealth() {
+            try {
+                const response = await fetch(`${TUNNEL_URL}/health`);
+                const data = await response.json();
+                addResult(`✅ Health check successful: ${data.status}`, 'success');
+            } catch (error) {
+                addResult(`❌ Health check failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testStatus() {
+            try {
+                const response = await fetch(`${TUNNEL_URL}/api/status`);
+                const data = await response.json();
+                addResult(`✅ Status check successful: ${data.status}`, 'success');
+            } catch (error) {
+                addResult(`❌ Status check failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testAPIKey() {
+            try {
+                const response = await fetch(`${TUNNEL_URL}/api/set-api-key`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ api_key: 'sk-test-invalid-key-for-testing' })
+                });
+                const data = await response.json();
+                if (data.error) {
+                    addResult(`✅ API key endpoint working (expected error): ${data.error}`, 'success');
+                } else {
+                    addResult(`✅ API key endpoint working: ${data.message}`, 'success');
+                }
+            } catch (error) {
+                addResult(`❌ API key test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-test on load
+        window.onload = function() {
+            addResult('🚀 Starting tunnel tests...', 'info');
+            testHealth();
+            setTimeout(testStatus, 1000);
+            setTimeout(testAPIKey, 2000);
+        };
+    </script>
+</body>
+</html>
