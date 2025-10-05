@@ -73,7 +73,25 @@ class ProcurementRAG:
         
         logger.info(f"✅ Initialized ProcurementRAG with persistent storage")
     
-    def extract_text_from_pdf(self, pdf_path: str) -> Dict[str, any]:
+    def extract_text_from_document(self, file_path: str) -> Dict[str, any]:
+        """Extract text from various document formats (PDF, TXT, DOCX)."""
+        file_extension = Path(file_path).suffix.lower()
+        
+        try:
+            if file_extension == '.pdf':
+                return self._extract_from_pdf(file_path)
+            elif file_extension == '.txt':
+                return self._extract_from_txt(file_path)
+            elif file_extension == '.docx':
+                return self._extract_from_docx(file_path)
+            else:
+                raise ValueError(f"Unsupported file format: {file_extension}")
+                
+        except Exception as e:
+            logger.error(f"❌ Error extracting document {file_path}: {e}")
+            raise
+
+    def _extract_from_pdf(self, pdf_path: str) -> Dict[str, any]:
         """Enhanced PDF extraction with structure preservation."""
         try:
             converter = DocumentConverter()
@@ -90,11 +108,72 @@ class ProcurementRAG:
             doc_hash = hashlib.md5(text.encode()).hexdigest()
             metadata["doc_hash"] = doc_hash
             
-            logger.info(f"✅ Extracted text from {metadata['filename']}")
+            logger.info(f"✅ Extracted text from PDF {metadata['filename']}")
             return {"text": text, "metadata": metadata}
             
         except Exception as e:
             logger.error(f"❌ Error extracting PDF {pdf_path}: {e}")
+            raise
+
+    def _extract_from_txt(self, txt_path: str) -> Dict[str, any]:
+        """Extract text from TXT files with proper encoding detection."""
+        try:
+            # Try different encodings
+            encodings = ['utf-8', 'utf-8-sig', 'latin-1', 'cp1252', 'iso-8859-1']
+            text = None
+            
+            for encoding in encodings:
+                try:
+                    with open(txt_path, 'r', encoding=encoding) as file:
+                        text = file.read()
+                    logger.info(f"✅ Successfully read TXT file with {encoding} encoding")
+                    break
+                except UnicodeDecodeError:
+                    continue
+            
+            if text is None:
+                raise ValueError("Could not decode text file with any supported encoding")
+            
+            metadata = {
+                "filename": Path(txt_path).name,
+                "filepath": txt_path,
+                "extraction_date": datetime.now().isoformat(),
+                "file_type": "text"
+            }
+            
+            doc_hash = hashlib.md5(text.encode('utf-8')).hexdigest()
+            metadata["doc_hash"] = doc_hash
+            
+            logger.info(f"✅ Extracted text from TXT {metadata['filename']}")
+            return {"text": text, "metadata": metadata}
+            
+        except Exception as e:
+            logger.error(f"❌ Error extracting TXT {txt_path}: {e}")
+            raise
+
+    def _extract_from_docx(self, docx_path: str) -> Dict[str, any]:
+        """Extract text from DOCX files."""
+        try:
+            from docx import Document
+            
+            doc = Document(docx_path)
+            text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
+            
+            metadata = {
+                "filename": Path(docx_path).name,
+                "filepath": docx_path,
+                "extraction_date": datetime.now().isoformat(),
+                "file_type": "docx"
+            }
+            
+            doc_hash = hashlib.md5(text.encode('utf-8')).hexdigest()
+            metadata["doc_hash"] = doc_hash
+            
+            logger.info(f"✅ Extracted text from DOCX {metadata['filename']}")
+            return {"text": text, "metadata": metadata}
+            
+        except Exception as e:
+            logger.error(f"❌ Error extracting DOCX {docx_path}: {e}")
             raise
     
     def smart_chunk_text(self, text: str, metadata: Dict) -> List[Dict]:
@@ -141,12 +220,12 @@ class ProcurementRAG:
     
     def store_document(
         self, 
-        pdf_path: str, 
+        file_path: str, 
         doc_type: Optional[str] = None,
         custom_metadata: Optional[Dict] = None
     ):
         """Store a procurement document in the appropriate in-memory collection."""
-        extracted = self.extract_text_from_pdf(pdf_path)
+        extracted = self.extract_text_from_document(file_path)
         text = extracted["text"]
         metadata = extracted["metadata"]
         

@@ -57,8 +57,12 @@ def init_rag():
     global rag_system
     if rag_system is None:
         logger.info("Initializing Procurement RAG System...")
-        rag_system = ProcurementRAG()
-        logger.info("RAG System initialized successfully")
+        try:
+            rag_system = ProcurementRAG()
+            logger.info("RAG System initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize RAG system: {e}")
+            raise
     return rag_system
 
 # Ensure upload directory exists
@@ -190,6 +194,27 @@ def get_status():
     
     return jsonify(status), 200
 
+@app.route('/api/warmup', methods=['POST'])
+@handle_errors
+def warmup():
+    """Warm up the RAG system to avoid initialization delays"""
+    logger.info("Warmup request received")
+    
+    try:
+        rag = init_rag()
+        logger.info("RAG system warmed up successfully")
+        return jsonify({
+            "status": "success",
+            "message": "RAG system initialized and ready",
+            "timestamp": datetime.now().isoformat()
+        }), 200
+    except Exception as e:
+        logger.error(f"Warmup failed: {e}")
+        return jsonify({
+            "error": f"Warmup failed: {str(e)}",
+            "status": "error"
+        }), 500
+
 # ========================================
 # DOCUMENT MANAGEMENT ENDPOINTS
 # ========================================
@@ -199,7 +224,16 @@ def get_status():
 def upload_policy():
     """Upload a policy document"""
     logger.info("Upload policy request received")
-    rag = init_rag()
+    
+    try:
+        rag = init_rag()
+    except Exception as e:
+        logger.error(f"RAG system initialization failed: {e}")
+        return jsonify({
+            "error": "System is initializing. Please wait a moment and try again.",
+            "status": "error",
+            "retry_after": 30
+        }), 503
     
     # Check if file is present
     if 'file' not in request.files:
