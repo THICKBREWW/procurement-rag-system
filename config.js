@@ -6,7 +6,7 @@
 const CONFIG = {
     // API Configuration
     API: {
-        BASE_URL: 'https://oecd-edt-elvis-campbell.trycloudflare.com', // Flask API server
+        BASE_URL: 'https://watts-saver-vid-hollywood.trycloudflare.com', // Flask API server
         ENDPOINTS: {
             // Health and Status
             HEALTH: '/health',
