@@ -14,6 +14,18 @@ python app/api.py
 # http://localhost:5000
 ```
 
+### **🌐 Global Access via Cloudflare Tunnel**
+```bash
+# Start the Flask API server
+python app/api.py
+
+# In another terminal, start Cloudflare tunnel
+.\cloudflared tunnel --url http://127.0.0.1:5000
+
+# Access globally via the provided tunnel URL
+# Example: https://your-tunnel-url.trycloudflare.com
+```
+
 ### **Streamlit UI (Alternative)**
 ```bash
 # Start Streamlit interface
@@ -34,10 +46,11 @@ python app/api.py
 
 ## ✨ **What's New - Latest Updates**
 
-- ✅ **Fixed Compliance Check Issues** - No more API key errors
-- ✅ **Fixed Form Validation** - No more repetitive "buyer name" errors  
+- ✅ **Global Access via Cloudflare Tunnel** - Access your system from anywhere in the world
+- ✅ **Fixed API Key Configuration** - Frontend now correctly connects to tunnel
+- ✅ **Working Document Upload** - PDF processing and chunking working perfectly
+- ✅ **Compliance Check Working** - Full AI-powered compliance analysis
 - ✅ **Persistent Storage** - Documents won't be lost on restart
-- ✅ **Microsoft Office UI** - Perfect Word add-in styling
 - ✅ **Enhanced Error Handling** - Better user experience
 
 ## 🔧 **Configuration**
