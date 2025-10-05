@@ -21,6 +21,17 @@ streamlit run app/streamlit_app.py
 # Open: http://localhost:8501
 ```
 
+### **Microsoft Office Script Lab Integration**
+```bash
+# Start the API server
+python app/api.py
+
+# Access Script Lab in Microsoft Office:
+# 1. Open Word/Excel/PowerPoint
+# 2. Go to Insert > Office Add-ins > Script Lab
+# 3. Use the provided Script Lab code for Office integration
+```
+
 ## ✨ **What's New - Latest Updates**
 
 - ✅ **Fixed Compliance Check Issues** - No more API key errors
@@ -42,6 +53,127 @@ streamlit run app/streamlit_app.py
 - `POST /api/grammar-check` - Fix grammar and spelling
 - `POST /api/fix-contract` - Fix contracts with compliance
 - `POST /api/suggest-clauses` - Find missing clauses
+
+## 🔧 **Microsoft Office Script Lab Setup**
+
+### **What is Script Lab?**
+Script Lab is a Microsoft Office add-in that allows you to run JavaScript code directly within Word, Excel, and PowerPoint. It's perfect for integrating our procurement RAG system with Office documents.
+
+### **Setup Instructions:**
+
+#### **1. Install Script Lab**
+1. Open Microsoft Word/Excel/PowerPoint
+2. Go to **Insert** > **Office Add-ins**
+3. Search for **"Script Lab"**
+4. Click **Add** to install
+
+#### **2. Configure Script Lab**
+1. Open Script Lab from the **Insert** tab
+2. Click **"Code"** in the Script Lab panel
+3. Replace the default code with our integration code
+4. Set the API server URL to your local server or Cloudflare tunnel
+
+#### **3. Script Lab Integration Code**
+```javascript
+// Script Lab code for Procurement RAG System
+const API_BASE_URL = 'https://oecd-edt-elvis-campbell.trycloudflare.com'; // or http://localhost:5000
+
+async function checkCompliance() {
+    try {
+        const text = await Office.context.document.getSelectedDataAsync(Office.CoercionType.Text);
+        
+        const response = await fetch(`${API_BASE_URL}/api/check-compliance`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                text: text.value,
+                api_key: 'YOUR_ANTHROPIC_API_KEY' // Set your API key here
+            })
+        });
+        
+        const result = await response.text();
+        await Office.context.document.setSelectedDataAsync(result);
+        
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+async function generateContract() {
+    try {
+        const requirements = await Office.context.document.getSelectedDataAsync(Office.CoercionType.Text);
+        
+        const response = await fetch(`${API_BASE_URL}/api/generate-contract`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contract_type: 'service',
+                requirements: requirements.value,
+                api_key: 'YOUR_ANTHROPIC_API_KEY'
+            })
+        });
+        
+        const result = await response.text();
+        await Office.context.document.setSelectedDataAsync(result);
+        
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+// Add buttons to the Script Lab interface
+Office.onReady(() => {
+    // This will be called when Script Lab is ready
+});
+```
+
+#### **4. Usage in Office**
+1. **Select text** in your Word document
+2. **Run the function** in Script Lab (checkCompliance, generateContract, etc.)
+3. **Results will be inserted** into your document automatically
+
+### **Available Script Lab Functions:**
+- `checkCompliance()` - Check selected text for compliance
+- `generateContract()` - Generate contract from requirements
+- `fixGrammar()` - Fix grammar and spelling
+- `suggestClauses()` - Find missing contract clauses
+
+### **Benefits of Script Lab Integration:**
+- ✅ **Direct Office integration** - No copy-paste needed
+- ✅ **Real-time analysis** - Work directly in your documents
+- ✅ **Seamless workflow** - Stay in Office environment
+- ✅ **Easy to use** - Simple JavaScript functions
+- ✅ **Customizable** - Modify code for your needs
+
+## 🌐 **Cloudflare Tunnel Setup (Global Access)**
+
+### **What is Cloudflare Tunnel?**
+Cloudflare Tunnel allows you to expose your local development server to the internet without port forwarding or complex networking setup. Perfect for sharing your procurement RAG system globally.
+
+### **Quick Setup:**
+```bash
+# 1. Install cloudflared
+.\install-cloudflared.bat
+
+# 2. Start the tunnel
+.\start-tunnel.bat
+
+# 3. Your app will be available at a public URL like:
+# https://abc123.trycloudflare.com
+```
+
+### **Benefits:**
+- ✅ **Global access** - Share with anyone worldwide
+- ✅ **HTTPS encryption** - Secure by default
+- ✅ **No port forwarding** - Works behind firewalls
+- ✅ **Free** - No cost for basic usage
+- ✅ **Easy setup** - One command deployment
+
+### **Usage:**
+1. **Start your API server:** `python app/api.py`
+2. **Start the tunnel:** `.\start-tunnel.bat`
+3. **Share the public URL** with others
+4. **Use Script Lab** with the public URL for global access
 
 [![Deploy to Streamlit Cloud](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io)
 
