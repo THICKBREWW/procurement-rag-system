@@ -1,0 +1,16 @@
+name = "procurement-rag-system"
+main = "app/worker.py"
+compatibility_date = "2024-10-05"
+compatibility_flags = ["python_workers"]
+
+[env.production]
+name = "procurement-rag-system"
+
+[[env.production.vars]]
+ENVIRONMENT = "production"
+
+[build]
+command = "pip install -r requirements-cloudflare.txt"
+
+[site]
+bucket = "./app"
